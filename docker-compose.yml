@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      # Mount code for hot-reload during development
+      - ./app:/app/app
+      - ./templates:/app/templates
+    environment:
+      - LOG_LEVEL=DEBUG
+      - MAX_FILE_SIZE_MB=10
+    restart: unless-stopped

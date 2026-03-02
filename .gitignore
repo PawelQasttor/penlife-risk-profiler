@@ -1,0 +1,76 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+*.cover
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+*.log
+output/
+test_output.pdf
+calibration_output.pdf
+coordinates_picked.json
+coordinates_new_template.json
+
+# PDFs (except templates)
+*.pdf
+!templates/*.pdf
+
+# Development tools and debug scripts
+compare_templates.py
+recalibrate_new_template.py
+analyze_template.py
+visual_coordinate_picker.py
+calibrate_interactive.py
+debug_*.py
+extract_all_coordinates.py
+measure_pdf_boxes.py
+find_longest_text.py
+search_adviser_notes.py
+test_*.py
+!tests/test_*.py
+batch_process.py
+process_all_pdfs.py
+process_all.bat
+run_local.bat
+coordinate_changes_summary.txt
+pdf_coordinates.json
+
+# Old template (keep only new one)
+templates/PenLife Risk Profiler.pdf
+
+# Multiple guides (keep only essential ones)
+GCP_DEPLOYMENT.md
+QUICK_START_GCP.md
+QUICKSTART.md
+RECALIBRATION_GUIDE.md
+SETUP_GUIDE_COMPLETE.md
+SETUP_QUICK_REFERENCE.md
+
+# Environment
+.env
+.env.local
