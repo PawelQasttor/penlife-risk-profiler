@@ -210,7 +210,7 @@ class PDFFiller:
                 self._insert_text(page, value, c["x"], c["y"], c.get("size", 10), c.get("max_width"), c.get("max_lines", 1))
 
         # Discussion points
-        if discussion_points and "discussion_points" in coords:
+        if discussion_points is not None and discussion_points.strip() and "discussion_points" in coords:
             c = coords["discussion_points"]
             self._insert_multiline_text(page, discussion_points, c["x"], c["y"], c.get("size", 7), c.get("max_width"))
 
@@ -243,7 +243,7 @@ class PDFFiller:
                 self._insert_text(page, value, c["x"], c["y"], c.get("size", 10), c.get("max_width"), c.get("max_lines", 1))
 
         # Discussion points
-        if discussion_points and "discussion_points" in coords:
+        if discussion_points is not None and discussion_points.strip() and "discussion_points" in coords:
             c = coords["discussion_points"]
             self._insert_multiline_text(page, discussion_points, c["x"], c["y"], c.get("size", 7), c.get("max_width"))
 

@@ -176,6 +176,9 @@ async def fill_risk_profiler(
     file: UploadFile = File(..., description="Cashcalc risk questionnaire PDF"),
     discussion_points: Optional[str] = Form(None, description="Optional discussion points")
 ):
+    # Normalize empty strings to None
+    if discussion_points is not None and not discussion_points.strip():
+        discussion_points = None
     """
     Process Cashcalc PDF and generate populated PenLife Risk Profiler
 
