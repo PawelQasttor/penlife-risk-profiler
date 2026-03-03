@@ -4,10 +4,12 @@ Main FastAPI application entry point
 """
 
 import logging
+import os
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import time
+from google.cloud import secretmanager
 
 from app.api import routes
 
@@ -17,6 +19,26 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# Fetch API key from Secret Manager on startup
+def get_api_key() -> str:
+    """Fetch API key from Google Secret Manager"""
+    try:
+        project_id = os.environ.get("GOOGLE_CLOUD_PROJECT", "penlife-associates")
+        secret_name = f"projects/{project_id}/secrets/penlife-api-key/versions/latest"
+
+        client = secretmanager.SecretManagerServiceClient()
+        response = client.access_secret_version(request={"name": secret_name})
+        api_key = response.payload.data.decode("UTF-8")
+        logger.info("✅ API key loaded from Secret Manager")
+        return api_key
+    except Exception as e:
+        logger.error(f"❌ Failed to load API key from Secret Manager: {e}")
+        # Fallback for local development
+        return os.environ.get("API_KEY", "")
+
+# Load API key at startup
+EXPECTED_API_KEY = get_api_key()
 
 # Create FastAPI app
 app = FastAPI(
@@ -35,6 +57,42 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# API Key Authentication Middleware
+@app.middleware("http")
+async def verify_api_key(request: Request, call_next):
+    """Verify API key for protected endpoints"""
+    # Public endpoints (no auth required)
+    public_paths = ["/", "/health", "/docs", "/redoc", "/openapi.json"]
+
+    if request.url.path in public_paths:
+        return await call_next(request)
+
+    # Protected endpoints require X-API-Key header
+    api_key = request.headers.get("X-API-Key")
+
+    if not api_key:
+        logger.warning(f"❌ Missing API key for {request.url.path}")
+        return JSONResponse(
+            status_code=401,
+            content={
+                "error": "Unauthorized",
+                "message": "Missing X-API-Key header"
+            }
+        )
+
+    if api_key != EXPECTED_API_KEY:
+        logger.warning(f"❌ Invalid API key for {request.url.path}")
+        return JSONResponse(
+            status_code=403,
+            content={
+                "error": "Forbidden",
+                "message": "Invalid API key"
+            }
+        )
+
+    # API key is valid, proceed
+    return await call_next(request)
 
 # Request timing middleware
 @app.middleware("http")

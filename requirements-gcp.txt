@@ -1,6 +1,7 @@
 # GCP-specific dependencies
 google-cloud-aiplatform>=1.38.0
 google-cloud-storage>=2.10.0
+google-cloud-secret-manager>=2.16.0
 vertexai>=0.0.1
 
 # Core application dependencies
