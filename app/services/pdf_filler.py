@@ -91,9 +91,6 @@ class PDFFiller:
                 "capacity_q3": {"x": 334, "y": 443, "size": 6, "max_width": 220, "max_lines": 4},
                 "capacity_q4": {"x": 334, "y": 483, "size": 6, "max_width": 220, "max_lines": 4},
                 "capacity_q5": {"x": 334, "y": 524, "size": 6, "max_width": 220, "max_lines": 4},
-
-                # Discussion points section
-                "discussion_points": {"x": 36, "y": 583, "size": 7, "max_width": 520},
             },
             "page_6": {  # Your attitude for risk page (13 questions + investment term)
                 # All questions (NEW: x=334 standardized, y+5 pixels lower)
@@ -112,15 +109,15 @@ class PDFFiller:
                 "q12": {"x": 334, "y": 537, "size": 6, "max_width": 220, "max_lines": 4},
                 "q13": {"x": 334, "y": 573, "size": 6, "max_width": 220, "max_lines": 4},
                 "investment_term": {"x": 334, "y": 611, "size": 6, "max_width": 220, "max_lines": 4},
-
-                # Discussion points section
-                "discussion_points": {"x": 36, "y": 670, "size": 7, "max_width": 520},
             },
             "page_7": {  # Your attitude to risk result page (NO CHANGE)
                 "risk_level": {"x": 43, "y": 73, "size": 9, "max_width": 500}
             },
             "page_8": {  # Adjusted attitude for risk page (MINIMAL CHANGE)
                 "adjusted_level": {"x": 39, "y": 69, "size": 9, "max_width": 500}
+            },
+            "page_9": {  # Discussion notes page
+                "discussion_points": {"x": 39, "y": 66, "size": 7, "max_width": 520},
             }
         }
 
@@ -151,13 +148,16 @@ class PDFFiller:
 
             # Fill each page
             self._fill_page_1(doc, data)
-            self._fill_page_4(doc, data, discussion_points)
-            self._fill_page_6(doc, data, discussion_points)
+            self._fill_page_4(doc, data)
+            self._fill_page_6(doc, data)
             self._fill_page_7(doc, data, pie_chart_page4)  # Risk profile result
 
             # If adjusted risk profile exists, fill page 8
             if data.adjusted_risk_profile:
                 self._fill_page_8(doc, data, pie_chart_page6)
+
+            # Fill page 9 - Discussion notes
+            self._fill_page_9(doc, discussion_points)
 
             # Save to bytes
             output_bytes = doc.write()
@@ -179,7 +179,7 @@ class PDFFiller:
             c = coords["prepared_by"]
             self._insert_text(page, data.client_info.created_by, c["x"], c["y"], c.get("size", 11))
 
-    def _fill_page_4(self, doc: fitz.Document, data: RiskProfileData, discussion_points: str = None):
+    def _fill_page_4(self, doc: fitz.Document, data: RiskProfileData):
         """Fill page 4 - Understanding your risk profile"""
         page = doc[3]  # Page 4 (0-indexed = 3)
         coords = self.coordinates.get("page_4", {})
@@ -209,12 +209,7 @@ class PDFFiller:
                 c = coords[key]
                 self._insert_text(page, value, c["x"], c["y"], c.get("size", 10), c.get("max_width"), c.get("max_lines", 1))
 
-        # Discussion points
-        if discussion_points is not None and discussion_points.strip() and "discussion_points" in coords:
-            c = coords["discussion_points"]
-            self._insert_multiline_text(page, discussion_points, c["x"], c["y"], c.get("size", 7), c.get("max_width"))
-
-    def _fill_page_6(self, doc: fitz.Document, data: RiskProfileData, discussion_points: str = None):
+    def _fill_page_6(self, doc: fitz.Document, data: RiskProfileData):
         """Fill page 6 - Your attitude for risk (13 questions)"""
         page = doc[5]  # Page 6 (0-indexed = 5)
         coords = self.coordinates.get("page_6", {})
@@ -241,11 +236,6 @@ class PDFFiller:
             if key in coords:
                 c = coords[key]
                 self._insert_text(page, value, c["x"], c["y"], c.get("size", 10), c.get("max_width"), c.get("max_lines", 1))
-
-        # Discussion points
-        if discussion_points is not None and discussion_points.strip() and "discussion_points" in coords:
-            c = coords["discussion_points"]
-            self._insert_multiline_text(page, discussion_points, c["x"], c["y"], c.get("size", 7), c.get("max_width"))
 
     def _fill_page_7(self, doc: fitz.Document, data: RiskProfileData, pie_chart_bytes: bytes = None):
         """Fill page 7 - Your attitude to risk result"""
@@ -358,6 +348,22 @@ class PDFFiller:
                 # Place large chart below text, centered (480x480 - 50% bigger)
                 chart_rect = fitz.Rect(58, 280, 538, 760)  # x0, y0, x1, y1 (480x480, centered)
                 page.insert_image(chart_rect, stream=pie_chart_bytes)
+
+    def _fill_page_9(self, doc: fitz.Document, discussion_points: str = None):
+        """Fill page 9 - Discussion notes"""
+        if len(doc) <= 8:
+            logger.warning("Template doesn't have page 9")
+            return
+
+        if not discussion_points or not discussion_points.strip():
+            return
+
+        page = doc[8]  # Page 9 (0-indexed = 8)
+        coords = self.coordinates.get("page_9", {})
+
+        if "discussion_points" in coords:
+            c = coords["discussion_points"]
+            self._insert_multiline_text(page, discussion_points, c["x"], c["y"], c.get("size", 7), c.get("max_width"))
 
     def _wrap_text(self, text: str, max_chars: int = 80) -> list:
         """
